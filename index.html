@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- import the webpage's stylesheet -->
+    <link rel="stylesheet" href="/style.css" />
+
+    <!-- import the webpage's javascript file -->
+    <script src="/script.js" defer></script>
+    <script src="https://unpkg.com/d3@5.16.0/dist/d3.min.js"></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1 id="title" style="text-align: center">United States GDP</h1>
+    </div>
+    <!-- include the Glitch button to show what the webpage is about and
+          to make it easier for folks to view source and remix -->
+    <div class="glitchButton" style="position:fixed;top:20px;right:20px;"></div>
+    <script src="https://button.glitch.me/button.js" defer></script>
+    <script>
+      //const padding = 30;
+
+      const render = data => {
+        const height = 960;
+        const width = 1200;
+
+        const title = "United States GDP";
+        const xValue = d => d.date;
+        const xLabel = "Date";
+
+        const yValue = d => d.value;
+        const yLabel = "Gross Domestic Product";
+
+        const margin = { top: 40, right: 100, bottom: 50, left: 150 };
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        const xScale = d3
+          .scaleTime()
+          .domain(d3.extent(data, xValue))
+          .range([0, innerWidth]);
+
+        const yScale = d3
+          .scaleLinear()
+          .domain(d3.extent(data, yValue))
+          .range([innerHeight, 0]);
+
+        const svg = d3
+          .select("body")
+          .append("svg")
+          .attr("width", width)
+          .attr("height", height);
+
+        const yAxis = d3
+          .axisLeft(yScale)
+          .tickSize(4)
+          .tickPadding(5);
+
+        const xAxis = d3
+          .axisBottom(xScale)
+          .tickSize(0)
+          .tickPadding(5);
+
+        const g = svg
+          .append("g")
+          .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        const yAxisG = g.append("g").call(yAxis);
+
+        yAxisG
+          .append("text")
+          .attr("fill", "black")
+          .attr("class", "ylab")
+          .attr("y", -93)
+          .attr("x", -innerHeight / 2)
+          .attr("text-anchor", "middle")
+          .attr("transform", `rotate(-90)`)
+          .text(yLabel);
+
+        const xAxisG = g
+          .append("g")
+          .call(xAxis)
+          .attr("transform", `translate(0, ${innerHeight})`);
+
+        xAxisG
+          .append("text")
+          .attr("fill", "black")
+          .attr("y", 60)
+          .attr("x", innerWidth / 2)
+          .text(xLabel);
+
+        let div = d3
+          .select("body")
+          .append("div")
+          .attr("class", "tooltip")
+          .style("opacity", 0);
+
+        g.selectAll("rect")
+          .data(data)
+          .enter()
+          .append("rect")
+          .attr("fill", "rgb(51, 173, 255)")
+          .attr("class", "bar")
+          .on("mouseover", function(d) {
+            div
+              .transition()
+              .duration(200)
+              .style("opacity", 9);
+            div
+              .html(
+                `${xValue(d).getFullYear()} ${
+                  xValue(d) < 4
+                    ? "Q1"
+                    : xValue(d) < 7
+                    ? "Q2"
+                    : xValue(d) < 10
+                    ? "Q3"
+                    : "Q4"
+                }` +
+                  "\n" +
+                  `$${yValue(d)}` +
+                  " Billions"
+              )
+              .style("left", d3.event.pageX + "px")
+              .style("top", d3.event.pageY - 28 + "px");
+          })
+          .on("mouseout", d => {
+            div
+              .transition()
+              .duration(500)
+              .style("opacity", 0);
+          })
+          .attr("x", d => xScale(xValue(d)))
+          .attr("y", d => yScale(yValue(d)))
+          .attr("width", 3)
+          .attr("height", d => innerHeight - yScale(yValue(d)));
+      };
+
+      d3.json(
+        "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json"
+      ).then(result => {
+        result.data.forEach(d => {
+          d.date = new Date(d[0]);
+          d.value = +d[1];
+          //console.log(d.value);
+        });
+
+        render(result.data);
+      });
+
+      /*
+     
+      
+      const svg = d3.select('body')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+      
+      svg.selectAll("rect")
+         .data(dataset)
+         .enter()
+         .append("rect")
+         .attr("x", 10)
+         .attr("y", 0)
+         .attr("width", 25)
+         .attr("height", (d,i) => d[0]);
+      
+       */
+    </script>
+  </body>
+</html>
